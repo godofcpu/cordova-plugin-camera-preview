@@ -17,7 +17,7 @@ CameraPreview.startCamera = function(options, onSuccess, onError) {
         onSuccess = options;
         options = {};
     }
-  
+
     options.x = options.x || 0;
     options.y = options.y || 0;
     options.width = options.width || window.screen.width;
@@ -73,7 +73,28 @@ CameraPreview.takeSnapshot = function(opts, onSuccess, onError) {
         opts.quality = 85;
     }
 
-    exec(onSuccess, onError, PLUGIN_NAME, "takeSnapshot", [opts.quality]);
+    exec(onSuccess, onError, PLUGIN_NAME, "takeSnapshot", [opts.width, opts.height, opts.quality]);
+};
+
+
+
+CameraPreview.getBitmap = function(opts, onSuccess, onError) {
+    if (!opts) {
+        opts = {};
+    } else if (isFunction(opts)) {
+        onSuccess = opts;
+        opts = {};
+    }
+
+    if (!isFunction(onSuccess)) {
+        return false;
+    }
+
+    if (!opts.quality || opts.quality > 100 || opts.quality < 0) {
+        opts.quality = 85;
+    }
+
+    exec(onSuccess, onError, PLUGIN_NAME, "getBitmap", [opts.quality]);
 };
 
 CameraPreview.takePicture = function(opts, onSuccess, onError) {

@@ -84,20 +84,20 @@
 - (void) stopCamera:(CDVInvokedUrlCommand*)command {
     NSLog(@"stopCamera");
     CDVPluginResult *pluginResult;
-    
+
     if(self.sessionManager != nil) {
         [self.cameraRenderController.view removeFromSuperview];
         [self.cameraRenderController removeFromParentViewController];
-        
+
         self.cameraRenderController = nil;
         self.sessionManager = nil;
-        
+
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     }
     else {
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Camera not started"];
     }
-    
+
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -455,16 +455,86 @@
   }
 }
 
+
+
+
+- (UIImage *)resizeImage:(UIImage *)image scaledToSize:(CGSize)newSize {
+   CGFloat aspectRatio;
+
+   if (image.size.width > image.size.height) {
+       // It's landscape
+       aspectRatio = image.size.width / image.size.height;
+       newSize.height = newSize.width * aspectRatio;
+   } else {
+       // It's portrait
+       aspectRatio = image.size.height / image.size.width;
+       newSize.height = newSize.width * aspectRatio;
+   }
+
+   //UIGraphicsBeginImageContext(newSize);
+   // In next line, pass 0.0 to use the current device's pixel scaling factor (and thus account for Retina resolution).
+   // Pass 1.0 to force exact pixel size.
+   UIGraphicsBeginImageContextWithOptions(newSize, NO, 1.0);
+   [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
+   UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+   UIGraphicsEndImageContext();
+   return newImage;
+}
+
 - (void) takeSnapshot:(CDVInvokedUrlCommand*)command {
     NSLog(@"takeSnapshot");
     CDVPluginResult *pluginResult;
     if (self.cameraRenderController != NULL && self.cameraRenderController.view != NULL) {
-        CGFloat quality = (CGFloat)[command.arguments[0] floatValue] / 100.0f;
+        CGFloat width = (CGFloat)[command.arguments[0] floatValue];
+        CGFloat height = (CGFloat)[command.arguments[1] floatValue];
+        CGFloat quality = (CGFloat)[command.arguments[2] floatValue] / 100.0f;
+
+
         dispatch_async(self.sessionManager.sessionQueue, ^{
             UIImage *image = ((GLKView*)self.cameraRenderController.view).snapshot;
-            NSString *base64Image = [self getBase64Image:image.CGImage withQuality:quality];
             NSMutableArray *params = [[NSMutableArray alloc] init];
+
+
+
+            // NSArray* bitmapData = [self getRGBAsFromImage:image];
+            // CDVPluginResult *pluginResult;
+            // if (quality < 0) {
+            //   NSString *binaryImage = @"Binary image data";
+            //   [params addObject:binaryImage];
+            // } else {
+            //   NSString *base64Image = [self getBase64Image:image.CGImage withQuality:quality];
+            //   [params addObject:base64Image];
+            // }
+
+            NSString *base64Image;
+            if (width > 0 && height > 0) {
+                UIImage *resizedImage = [self resizeImage:image scaledToSize:CGSizeMake(width, height)];
+                base64Image = [self getBase64Image:resizedImage.CGImage withQuality:quality];
+            } else {
+                base64Image = [self getBase64Image:image.CGImage withQuality:quality];
+            }
+
             [params addObject:base64Image];
+
+            //NSString *base64Image = [self getBase64Image:image.CGImage withQuality:quality];
+            //[params addObject:base64Image];
+
+
+
+            //NSData *data = UIImageJPEGRepresentation([UIImage imageWithCGImage:image.CGImage], (CGFloat) .85);
+            //NSString* filePath = [self getTempFilePath:@"jpg"];
+            //NSError *err;
+
+            //if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+            //    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+            //}
+            //else {
+            //    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
+           // }
+
+            //NSString *binaryImage = filePath;
+            //[params addObject:binaryImage];
+
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:params];
             [pluginResult setKeepCallbackAsBool:true];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -474,6 +544,7 @@
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
 }
+
 
 
 -(void) setColorEffect:(CDVInvokedUrlCommand*)command {
@@ -743,11 +814,11 @@
           NSData *data = UIImageJPEGRepresentation([UIImage imageWithCGImage:resultFinalImage], (CGFloat) quality);
           NSString* filePath = [self getTempFilePath:@"jpg"];
           NSError *err;
-         
-          if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {           
+
+          if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
           }
-          else {           
+          else {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
           }
         } else {
@@ -782,7 +853,7 @@
     do {
         filePath = [NSString stringWithFormat:@"%@/%@%04d.%@", tmpPath, TMP_IMAGE_PREFIX, i++, extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
-    
+
     return filePath;
 }
 

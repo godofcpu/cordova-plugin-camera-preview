@@ -1,3 +1,7 @@
+# Fork changes
+This fork provides additional functionality to the takeSnapshot method.  It uses the width and height parameters (if specified) to resize teh snapshot to that size before sending it back.  THis helps with memory leaks during image recognition as iOS tends to crash when you send a several mb base-64 encoded string back to it several times a second.
+
+
 # Cordova Plugin Camera Preview
 <a href="https://badge.fury.io/js/cordova-plugin-camera-preview" target="_blank"><img height="21" style='border:0px;height:21px;' border='0' src="https://badge.fury.io/js/cordova-plugin-camera-preview.svg" alt="NPM Version"></a>
 <a href='https://www.npmjs.org/package/cordova-plugin-camera-preview' target='_blank'><img height='21' style='border:0px;height:21px;' src='https://img.shields.io/npm/dt/cordova-plugin-camera-preview.svg?label=NPM+Downloads' border='0' alt='NPM Downloads' /></a>
