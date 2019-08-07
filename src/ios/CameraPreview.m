@@ -461,15 +461,27 @@
 - (UIImage *)resizeImage:(UIImage *)image scaledToSize:(CGSize)newSize {
    CGFloat aspectRatio;
 
-   if (image.size.width > image.size.height) {
+    if (image.imageOrientation == UIImageOrientationLeft || image.imageOrientation == UIImageOrientationRight) {
        // It's landscape
-       aspectRatio = image.size.width / image.size.height;
-       newSize.height = newSize.width * aspectRatio;
-   } else {
+       aspectRatio = image.size.height / image.size.width;
+       newSize.height = newSize.width / aspectRatio;
+    } else {
+        NSLog(@"portrait");
        // It's portrait
        aspectRatio = image.size.height / image.size.width;
        newSize.height = newSize.width * aspectRatio;
-   }
+    }
+
+
+   //if (image.size.width > image.size.height) {
+       // It's landscape
+     //  aspectRatio = image.size.width / image.size.height;
+       //newSize.height = newSize.width * aspectRatio;
+  // } else {
+    //   // It's portrait
+  //     aspectRatio = image.size.height / image.size.width;
+  //     newSize.height = newSize.width * aspectRatio;
+  // }
 
    //UIGraphicsBeginImageContext(newSize);
    // In next line, pass 0.0 to use the current device's pixel scaling factor (and thus account for Retina resolution).
